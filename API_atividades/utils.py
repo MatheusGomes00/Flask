@@ -15,18 +15,18 @@ def consulta_pessoas():  # Realiza consulta na tabela Pessoas
 
 
 def altera_pessoa():  # Altera dados na tabela Pessoas
-    pessoa = Pessoas.query.filter_by(nome='Gomes').first()  # first() pega o primeiro registro
+    pessoa = Pessoas.query.filter_by(nome='Matheus').first()  # first() pega o primeiro registro/ocorrência
     pessoa.nome = 'Pedro'
     pessoa.save()
 
 
 def exclui_pessoa():  # Exclui dados na tabela pessoas
-    pessoa = Pessoas.query.filter_by(nome='Gomes').first()
+    pessoa = Pessoas.query.filter_by(nome='Matheus').first()
     pessoa.delete()
 
 
 if __name__ == '__main__':
-    # insere_pessoas()
-    # altera_pessoa()
+    insere_pessoas()
+    altera_pessoa()
     exclui_pessoa()
     consulta_pessoas()
