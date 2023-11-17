@@ -1,7 +1,9 @@
 from flask import Flask, request
 from flask_restful import Resource, Api
 from models import Pessoas, Atividades, StatusAtividade
+from flask_httpauth import HTTPBasicAuth
 
+auth = HTTPBasicAuth()
 app = Flask(__name__)
 api = Api(app)
 
@@ -14,8 +16,20 @@ lista == response = [1, 2, 3, 4, 5]
 dicionário == response = {"nome":"Matheus"}
 """
 
+USUARIOS = {
+    "Matheus": "1234",
+    "gomes": "4321"
+}
 
-class Pessoa(Resource):
+
+@auth.verify_password  # decora a def verificacao declarando que ela é a função verificadora de senha
+def verificacao(login, senha):
+    if not(login, senha):
+        return False
+    return USUARIOS.get(login) == senha
+
+
+class Pessoa(Resource):  # '/pessoa/<string:nome>/'
     # consultar pessoa pelo nome passado na URN
     def get(self, nome):
         pessoa = Pessoas.query.filter_by(nome=nome).first()
@@ -27,6 +41,7 @@ class Pessoa(Resource):
         return response
 
     # alterar pessoa pelo body, nome passado como atributo pela URN
+    @auth.login_required
     def put(self, nome):
         pessoa = Pessoas.query.filter_by(nome=nome).first()
         dados = request.json
@@ -38,6 +53,7 @@ class Pessoa(Resource):
         return response
 
     # deletar pessoa, pelo nome passado como atributo na URN
+    @auth.login_required
     def delete(self, nome):
         pessoa = Pessoas.query.filter_by(nome=nome).first()
         try:
@@ -49,7 +65,7 @@ class Pessoa(Resource):
         return response
 
 
-class ListaPessoas(Resource):
+class ListaPessoas(Resource):  # '/pessoa/'
     # consultar pessoas cadastradas
     def get(self):
         pessoas = Pessoas.query.first()  # não é recomendado o uso do .all() em banco de dados grandes, é inviável, a consulta deve ser parametrizada...
@@ -62,6 +78,7 @@ class ListaPessoas(Resource):
         return response
 
     # criar pessoa, passada pelo body
+    @auth.login_required
     def post(self):
         dados = request.json
         pessoa = Pessoas(nome=dados['nome'], idade=dados['idade'])
@@ -70,7 +87,7 @@ class ListaPessoas(Resource):
         return response
 
 
-class ConsultarAtividade(Resource):
+class ConsultarAtividade(Resource):  # '/atividades/<string:nome>/'
     # consultar atividades, filtrando pelo nome da pessoa
     def get(self, nome):
         pessoa = Pessoas.query.filter_by(nome=nome).first()
@@ -83,7 +100,7 @@ class ConsultarAtividade(Resource):
         return response
 
 
-class ConsultarAlterarStatus(Resource):
+class ConsultarAlterarStatus(Resource):  # '/status/<int:id>/'
     # consultar atividade por ID
     def get(self, id):
         atividade = Atividades.query.filter_by(id=id).first()
@@ -94,6 +111,7 @@ class ConsultarAlterarStatus(Resource):
         return response
 
     # alterar status atividade, por ID
+    @auth.login_required
     def put(self, id):
         atividade = Atividades.query.filter_by(id=id).first()
         try:
@@ -105,8 +123,9 @@ class ConsultarAlterarStatus(Resource):
         return response
 
 
-class InsereAtividades(Resource):
+class InsereAtividades(Resource):  # '/atividades/'
     # criar atividade, filtrando pelo ID da pessoa passado no body
+    @auth.login_required
     def post(self):
         dados = request.json
         pessoa = Pessoas.query.filter_by(id=dados['pessoa']).first()
